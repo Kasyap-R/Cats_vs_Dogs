@@ -1,0 +1,17 @@
+model:
+  type: "simple_cnn"
+  input_channels: 3
+  output_channels: 1
+  hidden_units: 128
+  model_save_path: 'C:\Users\User\OneDrive\Documents\MachineLearning\Pet_Classifier\models\model.pth'
+
+training:
+  epochs: 10
+  learning_rate: 0.001
+
+data:
+  train_data_path: "C:/ML_Data/Cats_vs_Dogs/train"
+  test_data_path: "C:/ML_Data/Cats_vs_Dogs/test1"
+  batch_size: 128
+  validation_split: 0.2
+  shuffle_dataset: True
