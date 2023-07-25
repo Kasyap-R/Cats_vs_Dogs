@@ -24,6 +24,21 @@ class UnlabeledImageFolder(Dataset):
         return image
 
 
+class SimpleImageDataset(Dataset):
+    def __init__(self, samples):
+        """
+        samples: List of (image_tensor, label) tuples
+        """
+        self.samples = samples
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        return self.samples[idx]
+
+
+
 class ImageDatasetLoader():
     def __init__(self, training_data_path: str, testing_data_path: str, batch_size: int, validation_split: float, shuffle_dataset: bool):
         self.training_data_path = training_data_path
@@ -43,37 +58,71 @@ class ImageDatasetLoader():
         ])
         return transform
 
+
     def load_data(self, path: str):
         """Load Images From a Given Path and Apply Transforms"""
         dataset = datasets.ImageFolder(path, transform=self.get_transforms())
         return dataset
+
 
     def split_data(self, dataset):
         """Splits Training Data into Training and Validation Set"""
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
         split = int(self.validation_split * dataset_size)
+        
         if self.shuffle_dataset:
-            torch.manual_seed(self.random_seed)
-            #ensure computations are deterministic, so we won't get different results each time we train
-            # Can be safely removed
-            torch.backends.cudnn.deterministic = True 
-            torch.backends.cudnn.benchmark = False 
-
             np.random.shuffle(indices)
         
         # Split data into training set and validation set
         train_indices, val_indices = indices[split:], indices[:split]
+        
+        train_samples = [dataset[i] for i in train_indices]
+        val_samples = [dataset[i] for i in val_indices]
+
+        # Create SimpleImageDataset instances
+        train_dataset = SimpleImageDataset(train_samples)
+        val_dataset = SimpleImageDataset(val_samples)
+
+        print("Size of the dataset before oversampling:", len(train_samples))
+        train_dataset = self.oversample_hard_data(train_dataset)  # Modify the oversample_hard_data method accordingly
 
         # Randomizes order of indices
         train_sampler = torch.utils.data.SubsetRandomSampler(train_indices)
         valid_sampler = torch.utils.data.SubsetRandomSampler(val_indices)
 
-        # Creates a DataLoader, a pytorch class which serves as an iterable for efficient handling of data
-        train_loader = DataLoader(dataset, batch_size=self.batch_size, sampler=train_sampler)
-        validation_loader = DataLoader(dataset, batch_size=self.batch_size, sampler=valid_sampler)
+        # Create DataLoader instances
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, sampler=train_sampler)
+        validation_loader = DataLoader(val_dataset, batch_size=self.batch_size, sampler=valid_sampler)
 
         return train_loader, validation_loader
+    
+
+    def oversample_hard_data(self, train_samples):
+        # Define the augmentation pipeline
+        augmentation = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(10),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+            # ... add other augmentation techniques as needed
+        ])
+
+        # Read misclassified samples
+        with open("missed_samples.txt", 'r') as f:
+            missed_samples = [line.strip() for line in f.readlines()]
+
+        augmented_samples = []
+        for path, label in train_samples:
+            if path in missed_samples:
+                image = Image.open(path)
+                augmented_image = augmentation(image)
+                augmented_image = self.get_transforms()(augmented_image)  
+                augmented_tensor = transforms.ToTensor()(augmented_image)
+                augmented_samples.append((path, label))  
+
+        # Extend the training samples
+        train_samples.extend(augmented_samples)
+        return train_samples
 
     def load_train_val(self):
         train_val_dataset = self.load_data(self.training_data_path)

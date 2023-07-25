@@ -10,7 +10,6 @@ if __name__ == "__main__":
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
     config_path = r"C:\Users\User\OneDrive\Documents\MachineLearning\Pet_Classifier\src\config\config.yaml"
     config = load_config(config_path)
-
     train(config_path)
 
 

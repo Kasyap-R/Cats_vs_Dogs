@@ -65,6 +65,7 @@ def train(config_path):
     # Define loss functions and optimizer (which just minimzes the loss function)
     loss_function = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=config['training']['learning_rate'])
+    scheduler = StepLR(optimizer, step_size=5, gamma=0.1)  # Reduces the learning rate by a factor of 0.1 every 5 epochs.
 
     # Training Loop
     num_epochs = config["training"]["epochs"]
@@ -87,6 +88,9 @@ def train(config_path):
         print(f"Epoch [{epoch+1}/{num_epochs}]")
         print(f"Training Loss: {average_train_loss:.4f}\t Training Accuracy: {train_accuracy:.2f}%")
         print(f"Validation Loss: {average_val_loss:.4f}\t Validation Accuracy: {val_accuracy:.2f}%\n")
+
+        # Decreases learning rate when it has 'stepped' 5 times
+        scheduler.step()
 
     # Save the model
     torch.save(model.state_dict(), model_config["model_save_path"])
