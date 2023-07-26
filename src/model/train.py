@@ -54,7 +54,8 @@ def train(config_path):
 
     # Load Data
     data_loader = initialize_data_loader(config)
-    training_data, validation_data = data_loader.load_train_val()
+    training_data = data_loader.load_train()
+    validation_data = data_loader.load_val()
 
     # Initialize Model and move to appropriate device (either CPU or GPY)
     model_config = config["model"]

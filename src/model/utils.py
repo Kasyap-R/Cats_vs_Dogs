@@ -17,6 +17,7 @@ def initialize_model(config):
 
 def initialize_data_loader(config):
     data_loader = ImageDatasetLoader(config["data"]["train_data_path"], 
+                                    config["data"]["val_data_path"],
                                     config["data"]["test_data_path"], 
                                     config["data"]["batch_size"], 
                                     config["data"]["validation_split"], 

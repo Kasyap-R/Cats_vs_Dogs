@@ -13,7 +13,7 @@ def visualize_data(config_path):
     num_samples = 10
     _, axs = plt.subplots(1, num_samples, figsize=(15, 5))
     data_loader = initialize_data_loader(config)
-    training_data, _ = data_loader.load_train_val()
+    training_data = data_loader.load_train()
     dataset = training_data.dataset
     
     for i in range(num_samples):
@@ -107,8 +107,8 @@ if __name__ == "__main__":
     # gather_missed_samples(model, config, "missed_samples.txt")
 
     # Check the models prediction for a certain image
-    image_path = r"C:/ML_Data/Cats_vs_Dogs/train\Dogs\dog.6792.jpg"
-    predict(image_path, model)
+    # image_path = r"C:/ML_Data/Cats_vs_Dogs/train\Cat\cat.11861.jpg"
+    # predict(image_path, model)
 
 
 
